@@ -70,3 +70,13 @@ class BookEditor(InterfaceAction):
         # do something based on the settings in prefs
         prefs
 
+    def accept_enter_event(self, event, mime_data):
+        if mime_data.hasFormat("application/calibre+from_library") or \
+                mime_data.hasFormat("text/plain") or \
+                mime_data.hasFormat("text/uri-list"):
+            return True
+
+        return False
+
+    def accept_drag_move_event(self, event, mime_data):
+        return self.accept_enter_event(event, mime_data)
