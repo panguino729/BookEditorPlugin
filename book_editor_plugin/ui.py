@@ -12,6 +12,58 @@ if False:
     # You do not need this code in your plugins
     get_icons = get_resources = None
 
+#---------IMPORTS---------
+from functools import partial
+from qt.core import QTimer
+
+#---------FROM JIM MILLER AND BENJAMIN PETERSON---------
+
+import functools
+import itertools
+import operator
+import sys
+import types
+
+# Useful for very coarse version differentiation.
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+PY34 = sys.version_info[0:2] >= (3, 4)
+
+if PY3:
+    string_types = str,
+    integer_types = int,
+    class_types = type,
+    text_type = str
+    binary_type = bytes
+
+    MAXSIZE = sys.maxsize
+else:
+    string_types = basestring,
+    integer_types = (int, long)
+    class_types = (type, types.ClassType)
+    text_type = unicode
+    binary_type = str
+
+    if sys.platform.startswith("java"):
+        # Jython always uses 32 bits.
+        MAXSIZE = int((1 << 31) - 1)
+    else:
+        # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
+        class X(object):
+
+            def __len__(self):
+                return 1 << 31
+        try:
+            len(X())
+        except OverflowError:
+            # 32-bit
+            MAXSIZE = int((1 << 31) - 1)
+        else:
+            # 64-bit
+            MAXSIZE = int((1 << 63) - 1)
+        del X
+
+
 # The class that all interface action plugins must inherit from
 from calibre.gui2.actions import InterfaceAction
 from calibre_plugins.book_editor.main import DemoDialog
@@ -70,13 +122,78 @@ class BookEditor(InterfaceAction):
         # do something based on the settings in prefs
         prefs
 
+    #---------CODE FROM JIM MILLER---------
+    # Code from Jim Miller https://github.com/JimmXinu/FanFicFare/blob/main/calibre-plugin/fff_plugin.py
     def accept_enter_event(self, event, mime_data):
         if mime_data.hasFormat("application/calibre+from_library") or \
                 mime_data.hasFormat("text/plain") or \
                 mime_data.hasFormat("text/uri-list"):
+            print('true')
             return True
 
         return False
 
     def accept_drag_move_event(self, event, mime_data):
         return self.accept_enter_event(event, mime_data)
+
+    def drop_event(self, event, mime_data):
+
+        dropped_ids=None
+        urllist=[]
+
+        libmime = 'application/calibre+from_library'
+        if mime_data.hasFormat(libmime):
+            print("success")
+            dropped_ids = [ int(x) for x in self.ensure_text(mime_data.data(libmime).data()).split() ]
+
+        if urllist or dropped_ids:
+            QTimer.singleShot(1, partial(self.do_drop,
+                                         dropped_ids=dropped_ids,
+                                         urllist=urllist))
+            return True
+
+        return False
+
+    def do_drop(self,dropped_ids=None,urllist=None):
+        # shouldn't ever be both.
+        if dropped_ids:
+            #self.update_dialog(False,dropped_ids)
+            print('dropped ids')
+
+    #-----HELPER FUNCTIONS---------
+    def ensure_text(s, encoding='utf-8', errors='strict'):
+        if isinstance(s, binary_type):
+            return s.decode(encoding, errors)
+        elif isinstance(s, text_type):
+            return s
+        else:
+            raise TypeError("not expecting type '%s'" % type(s))
+
+    def update_dialog(self,checked,id_list=None,extraoptions={}):
+        if not self.is_library_view():
+            print('Cannot Update Books from Device View')
+            return
+
+        if not id_list:
+            id_list = self.gui.library_view.get_selected_ids()
+
+        if len(id_list) == 0:
+            print('No Selected Books to Update')
+            return
+
+        self.check_valid_collision(extraoptions)
+
+        db = self.gui.current_db
+        books = [ self.make_book_id_only(x) for x in id_list ]
+
+        for j, book in enumerate(books):
+            book['listorder'] = j
+
+
+    # basic book, plus calibre_id.  Assumed bad until proven
+    # otherwise.
+    def make_book_id_only(self, idval):
+        book = self.make_book()
+        book['good'] = False
+        book['calibre_id'] = idval
+        return book
