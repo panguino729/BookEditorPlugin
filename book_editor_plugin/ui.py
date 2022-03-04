@@ -124,6 +124,7 @@ class BookEditor(InterfaceAction):
 
     #---------CODE FROM JIM MILLER---------
     # Code from Jim Miller https://github.com/JimmXinu/FanFicFare/blob/main/calibre-plugin/fff_plugin.py
+    # fucntion that handles what happens on enter
     def accept_enter_event(self, event, mime_data):
         if mime_data.hasFormat("application/calibre+from_library") or \
                 mime_data.hasFormat("text/plain") or \
@@ -133,27 +134,36 @@ class BookEditor(InterfaceAction):
 
         return False
 
+    # accepts first part of drag/drop and calls next function
     def accept_drag_move_event(self, event, mime_data):
         return self.accept_enter_event(event, mime_data)
 
+    # the drop event
     def drop_event(self, event, mime_data):
 
         dropped_ids=None
         urllist=[]
 
         libmime = 'application/calibre+from_library'
+        print ("mime_data.data(libmim).data(): {}".format(mime_data.data(libmime).data()))
+
+        #if mime_data.hasFormat(libmime):
+        #    print("success")
+        #    dropped_ids = [ int(x) for x in self.ensure_text(mime_data.data(libmime).data()).split() ]
         if mime_data.hasFormat(libmime):
             print("success")
-            dropped_ids = [ int(x) for x in self.ensure_text(mime_data.data(libmime).data()).split() ]
+            dropped_ids = [ int(x) for x in mime_data.data(libmime).data().split() ]
 
         if urllist or dropped_ids:
             QTimer.singleShot(1, partial(self.do_drop,
                                          dropped_ids=dropped_ids,
                                          urllist=urllist))
+            print ('QTimer true')
             return True
 
         return False
 
+    # funtion to call when dropping
     def do_drop(self,dropped_ids=None,urllist=None):
         # shouldn't ever be both.
         if dropped_ids:
@@ -161,6 +171,7 @@ class BookEditor(InterfaceAction):
             print('dropped ids')
 
     #-----HELPER FUNCTIONS---------
+    # ensure the input is actually text, decode it if not, or throw an error
     def ensure_text(s, encoding='utf-8', errors='strict'):
         if isinstance(s, binary_type):
             return s.decode(encoding, errors)
@@ -169,6 +180,7 @@ class BookEditor(InterfaceAction):
         else:
             raise TypeError("not expecting type '%s'" % type(s))
 
+    # update the window popup with the book
     def update_dialog(self,checked,id_list=None,extraoptions={}):
         if not self.is_library_view():
             print('Cannot Update Books from Device View')
