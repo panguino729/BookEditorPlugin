@@ -1,0 +1,7 @@
+The Book Editor Plugin
+===========================
+
+Created by Katarina Tretter
+
+Requires calibre >= 0.7.53
+
