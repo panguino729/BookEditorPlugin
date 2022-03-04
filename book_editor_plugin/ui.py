@@ -14,7 +14,10 @@ if False:
 
 #---------IMPORTS---------
 from functools import partial
-from qt.core import QTimer
+from qt.core import QApplication, QMenu, QTimer
+
+from calibre.ebooks.metadata import MetaInformation
+from calibre.ebooks.metadata.meta import get_metadata as calibre_get_metadata
 
 #---------FROM JIM MILLER AND BENJAMIN PETERSON---------
 
@@ -167,7 +170,7 @@ class BookEditor(InterfaceAction):
     def do_drop(self,dropped_ids=None,urllist=None):
         # shouldn't ever be both.
         if dropped_ids:
-            #self.update_dialog(False,dropped_ids)
+            self.update_dialog(False,dropped_ids)
             print('dropped ids')
 
     #-----HELPER FUNCTIONS---------
@@ -182,9 +185,9 @@ class BookEditor(InterfaceAction):
 
     # update the window popup with the book
     def update_dialog(self,checked,id_list=None,extraoptions={}):
-        if not self.is_library_view():
-            print('Cannot Update Books from Device View')
-            return
+        #if not self.is_library_view():
+        #    print('Cannot Update Books from Device View')
+        #    return
 
         if not id_list:
             id_list = self.gui.library_view.get_selected_ids()
@@ -193,14 +196,20 @@ class BookEditor(InterfaceAction):
             print('No Selected Books to Update')
             return
 
-        self.check_valid_collision(extraoptions)
+        #self.check_valid_collision(extraoptions)
 
         db = self.gui.current_db
         books = [ self.make_book_id_only(x) for x in id_list ]
+        
+        self.populate_book_from_calibre_id(books[0], db)
+
+        print ("Book: ", books[0]['title'])
 
         for j, book in enumerate(books):
             book['listorder'] = j
 
+        print ('end update_dialog')
+        
 
     # basic book, plus calibre_id.  Assumed bad until proven
     # otherwise.
@@ -209,3 +218,45 @@ class BookEditor(InterfaceAction):
         book['good'] = False
         book['calibre_id'] = idval
         return book
+
+    # Can't make book a class because it needs to be passed into the
+    # bg jobs and only serializable things can be.
+    def make_book(self):
+        book = {}
+        book['title'] = 'Unknown'
+        book['author_sort'] = book['author'] = ['Unknown'] # list
+        book['comments'] = '' # note this is the book comments.
+
+        book['good'] = True
+        book['status'] = 'Bad'
+        book['showerror'] = True # False when NotGoingToDownload is
+                                 # not-overwrite / not-update / skip
+                                 # -- what some would consider 'not an
+                                 # error'
+        book['calibre_id'] = None
+        book['begin'] = None
+        book['end'] = None
+        book['comment'] = '' # note this is a comment on the d/l or update.
+        book['url'] = ''
+        book['site'] = ''
+        book['series'] = ''
+        book['added'] = False
+        book['pubdate'] = None
+        book['publisher'] = None
+        return book
+
+    def populate_book_from_calibre_id(self, book, db=None):
+        mi = db.get_metadata(book['calibre_id'], index_is_id=True)
+        book['good'] = True
+        self.populate_book_from_mi(book,mi)
+
+    def populate_book_from_mi(self,book,mi):
+        book['title'] = mi.title
+        book['author'] = mi.authors
+        book['author_sort'] = mi.author_sort
+        if hasattr(mi,'publisher'):
+            book['publisher'] = mi.publisher
+        if hasattr(mi,'path'):
+            book['path'] = mi.path
+        if hasattr(mi,'id'):
+            book['calibre_id'] = mi.id

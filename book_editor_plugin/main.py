@@ -114,20 +114,3 @@ class DemoDialog(QDialog):
     def convert(self):
         prefs['ebook_file_path'] = self.path.text()
         self.msg.setText(self.path.text())
-
-
-class Convert(QDialog):
-    def __init__(self, gui, icon, do_user_config):
-        QDialog.__init__(self, gui)
-        self.gui = gui
-        self.do_user_config = do_user_config
-
-        # The current database shown in the GUI
-        # db is an instance of the class LibraryDatabase from db/legacy.py
-        # This class has many, many methods that allow you to do a lot of
-        # things. For most purposes you should use db.new_api, which has
-        # a much nicer interface from db/cache.py
-        self.db = gui.current_db
-
-        self.l = QVBoxLayout()
-        self.setLayout(self.l)
