@@ -297,7 +297,6 @@ class BookEditor(InterfaceAction):
             return error_dialog(self.gui, 'Cannot open: ' + book[0]['title'],
                     'No format available.',
                     show=True)
-            return
 
         # Confirm we have defined an application for that format in tweaks
         if external_app_path is None:
