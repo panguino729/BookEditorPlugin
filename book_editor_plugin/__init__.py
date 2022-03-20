@@ -13,7 +13,7 @@ class BookEditorPlugin(InterfaceActionBase):
     '''
     This class is a simple wrapper that provides information about the actual
     plugin class. The actual interface plugin class is called InterfacePlugin
-    and is defined in the ui.py file, as specified in the actual_plugin field
+    and is defined in the action.py file, as specified in the actual_plugin field
     below.
 
     The reason for having two classes is that it allows the command line
@@ -29,7 +29,7 @@ class BookEditorPlugin(InterfaceActionBase):
     #: This field defines the GUI plugin class that contains all the code
     #: that actually does something. Its format is module_path:class_name
     #: The specified class must be defined in the specified module.
-    actual_plugin       = 'calibre_plugins.book_editor.ui:BookEditor'
+    actual_plugin       = 'calibre_plugins.book_editor.action:BookEditor'
 
     def is_customizable(self):
         '''

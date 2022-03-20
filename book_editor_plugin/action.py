@@ -104,6 +104,8 @@ class BookEditor(InterfaceAction):
         self.qaction.setIcon(icon)
         self.qaction.triggered.connect(self.show_dialog)
 
+        self.is_library_selected = True
+
     def show_dialog(self):
         # The base plugin object defined in __init__.py
         base_plugin_object = self.interface_action_base_plugin
@@ -127,6 +129,7 @@ class BookEditor(InterfaceAction):
 
     #---------CODE FROM JIM MILLER---------
     # Code from Jim Miller https://github.com/JimmXinu/FanFicFare/blob/main/calibre-plugin/fff_plugin.py
+
     # fucntion that handles what happens on enter
     def accept_enter_event(self, event, mime_data):
         if mime_data.hasFormat("application/calibre+from_library") or \
@@ -134,6 +137,8 @@ class BookEditor(InterfaceAction):
                 mime_data.hasFormat("text/uri-list"):
             print('true')
             return True
+        else:
+            self.is_library_selected = False
 
         return False
 
@@ -245,11 +250,13 @@ class BookEditor(InterfaceAction):
         book['publisher'] = None
         return book
 
+    # populate book data based in calibre_id
     def populate_book_from_calibre_id(self, book, db=None):
         mi = db.get_metadata(book['calibre_id'], index_is_id=True)
         book['good'] = True
         self.populate_book_from_mi(book,mi)
 
+    # populate book data from mi
     def populate_book_from_mi(self,book,mi):
         book['title'] = mi.title
         book['author'] = mi.authors
@@ -260,3 +267,92 @@ class BookEditor(InterfaceAction):
             book['path'] = mi.path
         if hasattr(mi,'id'):
             book['calibre_id'] = mi.id
+
+    #---------CODE FROM GRANT DRAKE---------
+    # Code from Grant Drake https://www.mobileread.com/forums/showthread.php?t=118761
+    def open_with(self, book_format, external_app_path, app_args):
+        if not self.is_library_selected:
+            return
+        row = self.gui.library_view.currentIndex()
+        if not row.isValid():
+            # return error_dialog(self.gui, 'Cannot open with', 'No book selected', show=True)
+            print ("No book selected") 
+            return
+        db = self.gui.library_view.model().db
+        book_id = self.gui.library_view.model().id(row)
+
+        # Check our special case of a format set as "cover" to edit the cover
+        if book_format.lower() == 'cover':
+            if not db.has_cover(book_id):
+                # return error_dialog(self.gui, 'Cannot open with', 'Book has no cover.', show=True)
+                print ("Book has no cover")
+                return
+            path_to_cover = os.path.join(db.library_path, db.path(book_id, index_is_id=True), 'cover.jpg')
+            self.launch_app(external_app_path, app_args, path_to_cover)
+            return
+        elif book_format.lower() == 'template':
+            mi = db.get_metadata(row.row())
+            from calibre.ebooks.metadata.book.formatter import SafeFormat
+            path_to_file = SafeFormat().safe_format(app_args, mi, 'Open With template error', mi)
+            self.launch_app(external_app_path, '', path_to_file, wrap_args=False)
+            return
+
+        # Confirm format selected in formats
+        try:
+            path_to_book = db.format_abspath(book_id, book_format, index_is_id=True)
+        except:
+            path_to_book = None
+
+        if not path_to_book:
+            # return error_dialog(self.gui, 'Cannot open with',
+            #         'No ' + book_format + ' format available. First convert the book to ' + book_format + '.',
+            #         show=True)
+            print ('No ' + book_format + ' format available. First convert the book to ' + book_format + '.')
+            return
+
+        # Confirm we have defined an application for that format in tweaks
+        if external_app_path is None:
+            # return error_dialog(self.gui, 'Cannot open with',
+            #         'Path not specified for this format in your configuration.',
+            #         show=True)
+            print ('Path not specified for this format in your configuration.')
+            return
+        self.launch_app(external_app_path, app_args, path_to_book)
+
+    def launch_app(self, external_app_path, app_args, path_to_file, wrap_args=True):
+        external_app_path = os.path.expandvars(external_app_path)
+#         path_to_file = path_to_file.encode('utf-8')
+        if DEBUG:
+            print('Open: ', external_app_path, '(file): ', path_to_file, ' (args): ', app_args)
+
+        if isosx:
+            # For OSX we will not support optional command line arguments currently
+            if external_app_path.lower().endswith(".app"):
+                args = 'open -a "%s" "%s"' % (external_app_path, path_to_file)
+            else:
+                args = '"%s" "%s"' % (external_app_path, path_to_file)
+            subprocess.Popen(args, shell=True)
+
+        else:
+            # For Windows/Linux merge any optional command line args with the app/file paths
+            app_args_list = []
+            if app_args:
+                app_args_list = app_args.split(',')
+            app_args_list.insert(0, external_app_path)
+            app_args_list.append(path_to_file)
+            if iswindows:
+                # Add to the recently opened files list to support windows jump lists etc.
+                from calibre.gui2 import add_to_recent_docs
+                add_to_recent_docs(path_to_file)
+
+                DETACHED_PROCESS = 0x00000008
+                print('About to run a command:', external_app_path)
+                clean_env = dict(os.environ)
+                del clean_env['PATH']
+                subprocess.Popen(app_args_list, creationflags=DETACHED_PROCESS, env=clean_env)
+
+            else: #Linux
+                clean_env = dict(os.environ)
+                clean_env['LD_LIBRARY_PATH'] = ''
+                subprocess.Popen(app_args_list, env=clean_env)
+        

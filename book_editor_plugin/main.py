@@ -12,9 +12,13 @@ if False:
     # You do not need this code in your plugins
     get_icons = get_resources = None
 
-from qt.core import QDialog, QVBoxLayout, QPushButton, QMessageBox, QLabel, QLineEdit
+import os
 
+from qt.core import QDialog, QVBoxLayout, QPushButton, QMessageBox, QLabel, QLineEdit, QTableWidget, QTableWidgetItem, QFileDialog
+
+from calibre.constants import iswindows
 from calibre_plugins.book_editor.config import prefs
+from calibre.gui2 import choose_files
 
 class DemoDialog(QDialog):
 
@@ -33,7 +37,7 @@ class DemoDialog(QDialog):
         self.l = QVBoxLayout()
         self.setLayout(self.l)
 
-        self.label = QLabel(prefs['hello_world_msg'])
+        self.label = QLabel('Welcome to the Book Editor Plugin!')
         self.l.addWidget(self.label)
 
         self.setWindowTitle('Book Editor Plugin')
@@ -48,19 +52,19 @@ class DemoDialog(QDialog):
         #self.marked_button.clicked.connect(self.marked)
         #self.l.addWidget(self.marked_button)
 
-        self.view_button = QPushButton(
-            'View the most recently added book', self)
-        self.view_button.clicked.connect(self.view)
-        self.l.addWidget(self.view_button)
+        # self.view_button = QPushButton(
+        #     'View the most recently added book', self)
+        # self.view_button.clicked.connect(self.view)
+        # self.l.addWidget(self.view_button)
 
-        self.path = QLineEdit(self)
-        self.path.setText(prefs['ebook_file_path'])
-        self.l.addWidget(self.path)
+        # self.path = QLineEdit(self)
+        # self.path.setText(prefs['ebook_file_path'])
+        # self.l.addWidget(self.path)
 
-        self.convert_button = QPushButton(
-            'Test convert button', self)
-        self.convert_button.clicked.connect(self.convert)
-        self.l.addWidget(self.convert_button)
+        self.open_external_button = QPushButton(
+            'Text External Tool', self)
+        self.open_external_button.clicked.connect(self.open_external)
+        self.l.addWidget(self.open_external_button)
 
         self.msg = QLabel(prefs['ebook_file_path'])
         self.l.addWidget(self.msg)
@@ -91,26 +95,30 @@ class DemoDialog(QDialog):
         QMessageBox.about(self, 'About the Book Editor Plugin',
                 text.decode('utf-8'))
 
-    def view(self):
-        ''' View the most recently added book '''
-        most_recent = most_recent_id = None
-        db = self.db.new_api
-        for book_id, timestamp in db.all_field_for('timestamp', db.all_book_ids()).items():
-            if most_recent is None or timestamp > most_recent:
-                most_recent = timestamp
-                most_recent_id = book_id
+    # def view(self):
+    #     ''' View the most recently added book '''
+    #     most_recent = most_recent_id = None
+    #     db = self.db.new_api
+    #     for book_id, timestamp in db.all_field_for('timestamp', db.all_book_ids()).items():
+    #         if most_recent is None or timestamp > most_recent:
+    #             most_recent = timestamp
+    #             most_recent_id = book_id
 
-        if most_recent_id is not None:
-            # Get a reference to the View plugin
-            view_plugin = self.gui.iactions['View']
-            # Ask the view plugin to launch the viewer for row_number
-            view_plugin._view_calibre_books([most_recent_id])
+        # if most_recent_id is not None:
+        #     # Get a reference to the View plugin
+        #     view_plugin = self.gui.iactions['View']
+        #     # Ask the view plugin to launch the viewer for row_number
+        #     view_plugin._view_calibre_books([most_recent_id])
 
     #def config(self):
     #    self.do_user_config(parent=self)
     #    # Apply the changes
     #    self.label.setText(prefs['hello_world_msg'])
 
-    def convert(self):
-        prefs['ebook_file_path'] = self.path.text()
-        self.msg.setText(self.path.text())
+    # def open_external(self):
+    #     prefs['ebook_file_path'] = self.path.text()
+    #     self.msg.setText(self.path.text())
+
+    def open_external(self):
+        self.do_user_config(parent=self)
+        self.msg.setText(prefs['ebook_file_path'])
