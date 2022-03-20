@@ -45,6 +45,10 @@ class ConfigWidget(QWidget):
         self.save_settings_button.clicked.connect(self.save_settings)
         self.l.addWidget(self.save_settings_button)
 
+    def save_settings(self):
+        prefs['ebook_file_path'] = self.path.text()
+        
+    # Code from Grant Drake https://www.mobileread.com/forums/showthread.php?t=118761
     def open_external(self):
         app_path = None
 
@@ -57,5 +61,4 @@ class ConfigWidget(QWidget):
         prefs['ebbok_file_path'] = app_path
         self.path.setText(app_path)
 
-    def save_settings(self):
-        prefs['ebook_file_path'] = self.path.text()
+    

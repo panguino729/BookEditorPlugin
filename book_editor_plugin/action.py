@@ -13,11 +13,17 @@ if False:
     get_icons = get_resources = None
 
 #---------IMPORTS---------
+from calibre_plugins.book_editor.config import prefs
+
 from functools import partial
 from qt.core import QApplication, QMenu, QTimer
 
 from calibre.ebooks.metadata import MetaInformation
 from calibre.ebooks.metadata.meta import get_metadata as calibre_get_metadata
+
+import os, subprocess
+from calibre.constants import iswindows, isosx, DEBUG
+from calibre.gui2 import error_dialog
 
 #---------FROM JIM MILLER AND BENJAMIN PETERSON---------
 
@@ -175,8 +181,9 @@ class BookEditor(InterfaceAction):
     def do_drop(self,dropped_ids=None,urllist=None):
         # shouldn't ever be both.
         if dropped_ids:
-            self.update_dialog(False,dropped_ids)
+            books = self.update_dialog(False,dropped_ids)
             print('dropped ids')
+            self.open_with(books, prefs['ebook_file_path'], None)
 
     #-----HELPER FUNCTIONS---------
     # ensure the input is actually text, decode it if not, or throw an error
@@ -214,6 +221,7 @@ class BookEditor(InterfaceAction):
             book['listorder'] = j
 
         print ('end update_dialog')
+        return books
         
 
     # basic book, plus calibre_id.  Assumed bad until proven
@@ -269,59 +277,39 @@ class BookEditor(InterfaceAction):
             book['calibre_id'] = mi.id
 
     #---------CODE FROM GRANT DRAKE---------
-    # Code from Grant Drake https://www.mobileread.com/forums/showthread.php?t=118761
-    def open_with(self, book_format, external_app_path, app_args):
+    # Base code from Grant Drake https://www.mobileread.com/forums/showthread.php?t=118761
+    def open_with(self, book, external_app_path, app_args):
         if not self.is_library_selected:
             return
         row = self.gui.library_view.currentIndex()
         if not row.isValid():
-            # return error_dialog(self.gui, 'Cannot open with', 'No book selected', show=True)
-            print ("No book selected") 
-            return
+            return error_dialog(self.gui, 'Cannot open with', 'No book selected', show=True)
         db = self.gui.library_view.model().db
         book_id = self.gui.library_view.model().id(row)
 
-        # Check our special case of a format set as "cover" to edit the cover
-        if book_format.lower() == 'cover':
-            if not db.has_cover(book_id):
-                # return error_dialog(self.gui, 'Cannot open with', 'Book has no cover.', show=True)
-                print ("Book has no cover")
-                return
-            path_to_cover = os.path.join(db.library_path, db.path(book_id, index_is_id=True), 'cover.jpg')
-            self.launch_app(external_app_path, app_args, path_to_cover)
-            return
-        elif book_format.lower() == 'template':
-            mi = db.get_metadata(row.row())
-            from calibre.ebooks.metadata.book.formatter import SafeFormat
-            path_to_file = SafeFormat().safe_format(app_args, mi, 'Open With template error', mi)
-            self.launch_app(external_app_path, '', path_to_file, wrap_args=False)
-            return
-
         # Confirm format selected in formats
         try:
-            path_to_book = db.format_abspath(book_id, book_format, index_is_id=True)
+            path_to_book = db.format_abspath(book_id, 'EPUB', index_is_id=True)
         except:
             path_to_book = None
 
         if not path_to_book:
-            # return error_dialog(self.gui, 'Cannot open with',
-            #         'No ' + book_format + ' format available. First convert the book to ' + book_format + '.',
-            #         show=True)
-            print ('No ' + book_format + ' format available. First convert the book to ' + book_format + '.')
+            return error_dialog(self.gui, 'Cannot open: ' + book[0]['title'],
+                    'No format available.',
+                    show=True)
             return
 
         # Confirm we have defined an application for that format in tweaks
         if external_app_path is None:
-            # return error_dialog(self.gui, 'Cannot open with',
-            #         'Path not specified for this format in your configuration.',
-            #         show=True)
-            print ('Path not specified for this format in your configuration.')
-            return
+            return error_dialog(self.gui, 'Cannot open with',
+                    'Path not specified for this format in your configuration.',
+                    show=True)
         self.launch_app(external_app_path, app_args, path_to_book)
 
     def launch_app(self, external_app_path, app_args, path_to_file, wrap_args=True):
         external_app_path = os.path.expandvars(external_app_path)
 #         path_to_file = path_to_file.encode('utf-8')
+        external_app_path = prefs['ebook_file_path']
         if DEBUG:
             print('Open: ', external_app_path, '(file): ', path_to_file, ' (args): ', app_args)
 
