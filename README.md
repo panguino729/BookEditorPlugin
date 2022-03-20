@@ -10,4 +10,4 @@ As of now, most of the code is either taken from the [Calibre API Documentation]
 - [FanFicFare GitHub](https://github.com/JimmXinu/FanFicFare)
 - [Open With Forum Post](https://www.mobileread.com/forums/showthread.php?t=118761)
 ---
-*Updated: March 4, 2022*
+*Updated: March 20, 2022*
