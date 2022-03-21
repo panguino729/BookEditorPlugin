@@ -1,0 +1,11 @@
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\bin\Release\BookEditorTool.exe.config
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\bin\Release\BookEditorTool.exe
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\bin\Release\BookEditorTool.pdb
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\obj\Release\BookEditorTool.csproj.AssemblyReference.cache
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\obj\Release\BookEditorTool.csproj.SuggestedBindingRedirects.cache
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\obj\Release\BookEditorTool.Form1.resources
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\obj\Release\BookEditorTool.Properties.Resources.resources
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\obj\Release\BookEditorTool.csproj.GenerateResource.cache
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\obj\Release\BookEditorTool.csproj.CoreCompileInputs.cache
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\obj\Release\BookEditorTool.exe
+D:\Users\pangu\Documents\GitHub\BookEditorPlugin\BookEditorTool\BookEditorTool\obj\Release\BookEditorTool.pdb
