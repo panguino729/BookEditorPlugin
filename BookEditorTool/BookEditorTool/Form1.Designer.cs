@@ -32,19 +32,20 @@
             this.TextEditField = new System.Windows.Forms.RichTextBox();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.Font = new System.Windows.Forms.ToolStripComboBox();
             this.FontSize = new System.Windows.Forms.ToolStripComboBox();
-            this.listBox1 = new System.Windows.Forms.ListBox();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton5 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.listBox1 = new System.Windows.Forms.ListBox();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // TextEditField
             // 
+            this.TextEditField.AcceptsTab = true;
             this.TextEditField.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -83,6 +84,11 @@
             this.toolStripButton1.Text = "Save";
             this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
             // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
             // Font
             // 
             this.Font.Name = "Font";
@@ -102,21 +108,8 @@
             "22"});
             this.FontSize.Name = "FontSize";
             this.FontSize.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.FontSize.Size = new System.Drawing.Size(50, 25);
+            this.FontSize.Size = new System.Drawing.Size(50, 23);
             this.FontSize.Text = "12";
-            // 
-            // listBox1
-            // 
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.Items.AddRange(new object[] {
-            "Test Doc 1",
-            "Test Doc 2",
-            "Test Doc 3"});
-            this.listBox1.Location = new System.Drawing.Point(12, 35);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(114, 407);
-            this.listBox1.TabIndex = 2;
-            this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             // 
             // toolStripSeparator1
             // 
@@ -153,10 +146,18 @@
             this.toolStripButton5.Size = new System.Drawing.Size(23, 22);
             this.toolStripButton5.Text = "U";
             // 
-            // toolStripSeparator2
+            // listBox1
             // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            this.listBox1.FormattingEnabled = true;
+            this.listBox1.Items.AddRange(new object[] {
+            "Test Doc 1",
+            "Test Doc 2",
+            "Test Doc 3"});
+            this.listBox1.Location = new System.Drawing.Point(12, 35);
+            this.listBox1.Name = "listBox1";
+            this.listBox1.Size = new System.Drawing.Size(114, 407);
+            this.listBox1.TabIndex = 2;
+            this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             // 
             // Form1
             // 
