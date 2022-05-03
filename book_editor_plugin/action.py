@@ -90,6 +90,10 @@ class BookEditor(InterfaceAction):
 
     accepts_drops = True
 
+    # ---------APP ARGS---------
+    arg_list = []
+    arg_list.append("open")
+
     def genesis(self):
         # This method is called once per plugin, do initial setup here
 
@@ -289,7 +293,7 @@ class BookEditor(InterfaceAction):
 
         # Confirm format selected in formats
         try:
-            path_to_book = db.format_abspath(book_id, 'EPUB', index_is_id=True)
+            path_to_book = db.format_abspath(book_id, 'RTF', index_is_id=True)
         except:
             path_to_book = None
 
@@ -303,9 +307,9 @@ class BookEditor(InterfaceAction):
             return error_dialog(self.gui, 'Cannot open with',
                     'Path not specified for this format in your configuration.',
                     show=True)
-        self.launch_app(external_app_path, app_args, path_to_book)
+        self.launch_app(external_app_path, app_args, path_to_book, book)
 
-    def launch_app(self, external_app_path, app_args, path_to_file, wrap_args=True):
+    def launch_app(self, external_app_path, app_args, path_to_file, book, wrap_args=True):
         external_app_path = os.path.expandvars(external_app_path)
 #         path_to_file = path_to_file.encode('utf-8')
         external_app_path = prefs['ebook_file_path']
@@ -324,19 +328,22 @@ class BookEditor(InterfaceAction):
             # For Windows/Linux merge any optional command line args with the app/file paths
             app_args_list = []
             if app_args:
-                app_args_list = app_args.split(',')
+                app_args_list = app_args.split(' ')
             app_args_list.insert(0, external_app_path)
-            app_args_list.append(path_to_file)
+
+            # ---------ARGS---------
+            arg = '%s open "%s" "%s"' % (external_app_path, path_to_file, book[0]['title'])
+
             if iswindows:
                 # Add to the recently opened files list to support windows jump lists etc.
                 from calibre.gui2 import add_to_recent_docs
                 add_to_recent_docs(path_to_file)
 
                 DETACHED_PROCESS = 0x00000008
-                print('About to run a command:', external_app_path)
+                print('About to run a command:', arg)
                 clean_env = dict(os.environ)
                 del clean_env['PATH']
-                subprocess.Popen(app_args_list, creationflags=DETACHED_PROCESS, env=clean_env)
+                subprocess.Popen(arg, creationflags=DETACHED_PROCESS, env=clean_env)
 
             else: #Linux
                 clean_env = dict(os.environ)

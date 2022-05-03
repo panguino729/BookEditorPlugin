@@ -37,7 +37,7 @@ class DemoDialog(QDialog):
         self.l = QVBoxLayout()
         self.setLayout(self.l)
 
-        self.label = QLabel('Welcome to the Book Editor Plugin!')
+        self.label = QLabel('Welcome to the Book Editor Plugin! Please choose the file location for the BookEditorTool by clicking the "Book Editor Tool Filepath" button.')
         self.l.addWidget(self.label)
 
         self.setWindowTitle('Book Editor Plugin')
@@ -62,7 +62,7 @@ class DemoDialog(QDialog):
         # self.l.addWidget(self.path)
 
         self.open_external_button = QPushButton(
-            'Text External Tool', self)
+            'Book Editor Tool Filepath', self)
         self.open_external_button.clicked.connect(self.open_external)
         self.l.addWidget(self.open_external_button)
 
