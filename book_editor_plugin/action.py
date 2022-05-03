@@ -194,7 +194,8 @@ class BookEditor(InterfaceAction):
             books = self.update_dialog(False, dropped_ids)
             print('dropped ids')
             print(books[0]['calibre_id'])
-            # db.add_format(books[0]['calibre_id'], 'book.rtf', os.path.dirname(db.format_abspath(books[0]['calibre_id'], 'EPUB', index_is_id=True)))
+            
+            # self.convert(db.format_abspath(books[0]['calibre_id'], 'EPUB', index_is_id=True))
 
             self.open_with(books, prefs['ebook_file_path'], None)
 
@@ -311,10 +312,19 @@ class BookEditor(InterfaceAction):
             try:
                 print('Converting')
                 path_to_book = self.convert(db.format_abspath(book_id, 'EPUB', index_is_id=True))
+                # Confirm we have defined an application for that format in tweaks
+                if external_app_path is None:
+                    return error_dialog(self.gui, 'Cannot open with',
+                                        'Path not specified for this format in your configuration.',
+                                        show=True)
+                self.launch_app(external_app_path, app_args, path_to_book, book)
             except:
                 return error_dialog(self.gui, 'Cannot open: ' + book[0]['title'],
                                 'No format available.',
                                 show=True)
+            # return error_dialog(self.gui, 'Cannot open: ' + book[0]['title'],
+            #                     'No format available.',
+            #                     show=True)
 
         # Confirm we have defined an application for that format in tweaks
         if external_app_path is None:
