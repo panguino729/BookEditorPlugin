@@ -85,6 +85,7 @@ namespace BookEditorTool
 
                 //if (cmdOpen)
                 //{
+                //    // Source: https://www.codeproject.com/Questions/173331/CMD-from-Windows-Form
                 //    string convertCmd = string.Format("ebook-convert {0} {1}", bookFilepath, Path.ChangeExtension(bookFilepath, "rtf")); // input file, output file
 
                 //    ProcessStartInfo processtartinfo = new ProcessStartInfo();
