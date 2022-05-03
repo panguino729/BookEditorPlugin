@@ -26,6 +26,26 @@ namespace BookEditorTool
             // Source: https://stackoverflow.com/questions/46037189/how-to-make-a-font-combobox-in-c by Fabio
             box.DrawItem += fontComboBox_DrawItem;
             box.DataSource = System.Drawing.FontFamily.Families.ToList();
+
+            // Source: https://www.howtogeek.com/howto/programming/get-command-line-arguments-in-a-windows-forms-application/
+            string[] args = Environment.GetCommandLineArgs();
+
+            int count = 0;
+            string bookFilepath;
+
+            // CMD: <BookEditorTool.exe filepath> open <book name>
+            foreach (string arg in args)
+            {
+                if (args[count] == "open")
+                {
+                    bookFilepath = args[count + 1];
+                    TextEditField.LoadFile(args[count + 1], RichTextBoxStreamType.RichText);
+                    openFiles.Items.Clear();
+                    openFiles.Items.Add(args[count + 2]);
+                }
+
+                count++;
+            }
         }
 
         /// <summary>
