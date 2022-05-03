@@ -15,6 +15,10 @@ namespace BookEditorTool
     {
         public FontFamily[] Families { get; }
 
+        private string bookFilepath = "";
+        private string bookFilenameImported = "";
+        private bool cmdOpen = false;
+
         public Form1()
         {
             InitializeComponent();
@@ -31,14 +35,15 @@ namespace BookEditorTool
             string[] args = Environment.GetCommandLineArgs();
 
             int count = 0;
-            string bookFilepath;
 
             // CMD: <BookEditorTool.exe filepath> open <book name>
             foreach (string arg in args)
             {
                 if (args[count] == "open")
                 {
-                    bookFilepath = args[count + 1];
+                    cmdOpen = true;
+                    bookFilepath = Path.GetDirectoryName(args[count + 1]);
+                    bookFilenameImported = Path.GetFileName(args[count + 1]);
                     TextEditField.LoadFile(args[count + 1], RichTextBoxStreamType.RichText);
                     openFiles.Items.Clear();
                     openFiles.Items.Add(args[count + 2]);
@@ -57,7 +62,17 @@ namespace BookEditorTool
         {
             try
             {
-                saveFileDialog1.FileName = openFiles.Items[0].ToString();
+                if (cmdOpen)
+                {
+                    saveFileDialog1.FileName = bookFilenameImported;
+                }
+                else
+                {
+                    saveFileDialog1.FileName = openFiles.Items[0].ToString();
+                }
+
+                saveFileDialog1.OverwritePrompt = true;
+                saveFileDialog1.InitialDirectory = bookFilepath;
                 saveFileDialog1.DefaultExt = "rtf";
                 saveFileDialog1.Filter = "Rich Text Format|*.rtf";
 
@@ -79,7 +94,7 @@ namespace BookEditorTool
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            
+
         }
 
         private void richTextBox1_TextChanged(object sender, EventArgs e)
@@ -100,7 +115,7 @@ namespace BookEditorTool
         #region Fonts - Source: https://stackoverflow.com/questions/46037189/how-to-make-a-font-combobox-in-c by Fabio
         private void fontComboBox_DrawItem(object sender, DrawItemEventArgs e)
         {
-            
+
             var comboBox = (ComboBox)sender;
             var fontFamily = (FontFamily)comboBox.Items[e.Index];
             var font = new Font(fontFamily, comboBox.Font.SizeInPoints);
