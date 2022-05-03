@@ -2,7 +2,22 @@
 # vim:fileencoding=UTF-8:ts=4:sw=4:sta:et:sts=4:ai
 # Base code provided by Kovid Goyal (Calibre API Documentation)
 
-__license__   = 'GPL v3'
+from re import S
+from calibre_plugins.book_editor.main import DemoDialog
+from calibre.gui2.actions import InterfaceAction
+import types
+import sys
+import operator
+import itertools
+import functools
+from calibre.gui2 import error_dialog
+from calibre.constants import iswindows, isosx, DEBUG
+from calibre.ebooks.metadata.meta import get_metadata as calibre_get_metadata
+from calibre.ebooks.metadata import MetaInformation
+from qt.core import QApplication, QMenu, QTimer
+from functools import partial
+from calibre_plugins.book_editor.config import prefs
+__license__ = 'GPL v3'
 __copyright__ = '2022, Katarina Tretter <kft3635@rit.edu>'
 __docformat__ = 'restructuredtext en'
 
@@ -12,26 +27,14 @@ if False:
     # You do not need this code in your plugins
     get_icons = get_resources = None
 
-#---------IMPORTS---------
-from calibre_plugins.book_editor.config import prefs
+# ---------IMPORTS---------
 
-from functools import partial
-from qt.core import QApplication, QMenu, QTimer
 
-from calibre.ebooks.metadata import MetaInformation
-from calibre.ebooks.metadata.meta import get_metadata as calibre_get_metadata
+import os
+import subprocess
 
-import os, subprocess
-from calibre.constants import iswindows, isosx, DEBUG
-from calibre.gui2 import error_dialog
+# ---------FROM JIM MILLER AND BENJAMIN PETERSON---------
 
-#---------FROM JIM MILLER AND BENJAMIN PETERSON---------
-
-import functools
-import itertools
-import operator
-import sys
-import types
 
 # Useful for very coarse version differentiation.
 PY2 = sys.version_info[0] == 2
@@ -74,8 +77,7 @@ else:
 
 
 # The class that all interface action plugins must inherit from
-from calibre.gui2.actions import InterfaceAction
-from calibre_plugins.book_editor.main import DemoDialog
+
 
 class BookEditor(InterfaceAction):
 
@@ -86,7 +88,7 @@ class BookEditor(InterfaceAction):
     # shortcut. Remember that currently calibre has no central management for
     # keyboard shortcuts, so try to use an unusual/unused shortcut.
     action_spec = ('Book Editor Plugin', None,
-            'Run the Book Editor Plugin', None)
+                   'Run the Book Editor Plugin', None)
 
     accepts_drops = True
 
@@ -137,7 +139,7 @@ class BookEditor(InterfaceAction):
         # do something based on the settings in prefs
         prefs
 
-    #---------CODE FROM JIM MILLER---------
+    # ---------CODE FROM JIM MILLER---------
     # Code from Jim Miller https://github.com/JimmXinu/FanFicFare/blob/main/calibre-plugin/fff_plugin.py
 
     # fucntion that handles what happens on enter
@@ -159,37 +161,44 @@ class BookEditor(InterfaceAction):
     # the drop event
     def drop_event(self, event, mime_data):
 
-        dropped_ids=None
-        urllist=[]
+        dropped_ids = None
+        urllist = []
 
         libmime = 'application/calibre+from_library'
-        print ("mime_data.data(libmim).data(): {}".format(mime_data.data(libmime).data()))
+        print("mime_data.data(libmim).data(): {}".format(
+            mime_data.data(libmime).data()))
 
-        #if mime_data.hasFormat(libmime):
+        # if mime_data.hasFormat(libmime):
         #    print("success")
         #    dropped_ids = [ int(x) for x in self.ensure_text(mime_data.data(libmime).data()).split() ]
         if mime_data.hasFormat(libmime):
             print("success")
-            dropped_ids = [ int(x) for x in mime_data.data(libmime).data().split() ]
+            dropped_ids = [int(x)
+                           for x in mime_data.data(libmime).data().split()]
 
         if urllist or dropped_ids:
             QTimer.singleShot(1, partial(self.do_drop,
                                          dropped_ids=dropped_ids,
                                          urllist=urllist))
-            print ('QTimer true')
+            print('QTimer true')
             return True
 
         return False
 
     # funtion to call when dropping
-    def do_drop(self,dropped_ids=None,urllist=None):
+    def do_drop(self, dropped_ids=None, urllist=None):
         # shouldn't ever be both.
         if dropped_ids:
-            books = self.update_dialog(False,dropped_ids)
+            db = self.gui.current_db
+
+            books = self.update_dialog(False, dropped_ids)
             print('dropped ids')
+            print(books[0]['calibre_id'])
+            # db.add_format(books[0]['calibre_id'], 'book.rtf', os.path.dirname(db.format_abspath(books[0]['calibre_id'], 'EPUB', index_is_id=True)))
+
             self.open_with(books, prefs['ebook_file_path'], None)
 
-    #-----HELPER FUNCTIONS---------
+    # -----HELPER FUNCTIONS---------
     # ensure the input is actually text, decode it if not, or throw an error
     def ensure_text(s, encoding='utf-8', errors='strict'):
         if isinstance(s, binary_type):
@@ -200,8 +209,8 @@ class BookEditor(InterfaceAction):
             raise TypeError("not expecting type '%s'" % type(s))
 
     # update the window popup with the book
-    def update_dialog(self,checked,id_list=None,extraoptions={}):
-        #if not self.is_library_view():
+    def update_dialog(self, checked, id_list=None, extraoptions={}):
+        # if not self.is_library_view():
         #    print('Cannot Update Books from Device View')
         #    return
 
@@ -212,24 +221,24 @@ class BookEditor(InterfaceAction):
             print('No Selected Books to Update')
             return
 
-        #self.check_valid_collision(extraoptions)
+        # self.check_valid_collision(extraoptions)
 
         db = self.gui.current_db
-        books = [ self.make_book_id_only(x) for x in id_list ]
-        
+        books = [self.make_book_id_only(x) for x in id_list]
+
         self.populate_book_from_calibre_id(books[0], db)
 
-        print ("Book: ", books[0]['title'])
+        print("Book: ", books[0]['title'])
 
         for j, book in enumerate(books):
             book['listorder'] = j
 
-        print ('end update_dialog')
+        print('end update_dialog')
         return books
-        
 
     # basic book, plus calibre_id.  Assumed bad until proven
     # otherwise.
+
     def make_book_id_only(self, idval):
         book = self.make_book()
         book['good'] = False
@@ -241,19 +250,19 @@ class BookEditor(InterfaceAction):
     def make_book(self):
         book = {}
         book['title'] = 'Unknown'
-        book['author_sort'] = book['author'] = ['Unknown'] # list
-        book['comments'] = '' # note this is the book comments.
+        book['author_sort'] = book['author'] = ['Unknown']  # list
+        book['comments'] = ''  # note this is the book comments.
 
         book['good'] = True
         book['status'] = 'Bad'
-        book['showerror'] = True # False when NotGoingToDownload is
-                                 # not-overwrite / not-update / skip
-                                 # -- what some would consider 'not an
-                                 # error'
+        book['showerror'] = True  # False when NotGoingToDownload is
+        # not-overwrite / not-update / skip
+        # -- what some would consider 'not an
+        # error'
         book['calibre_id'] = None
         book['begin'] = None
         book['end'] = None
-        book['comment'] = '' # note this is a comment on the d/l or update.
+        book['comment'] = ''  # note this is a comment on the d/l or update.
         book['url'] = ''
         book['site'] = ''
         book['series'] = ''
@@ -266,21 +275,21 @@ class BookEditor(InterfaceAction):
     def populate_book_from_calibre_id(self, book, db=None):
         mi = db.get_metadata(book['calibre_id'], index_is_id=True)
         book['good'] = True
-        self.populate_book_from_mi(book,mi)
+        self.populate_book_from_mi(book, mi)
 
     # populate book data from mi
-    def populate_book_from_mi(self,book,mi):
+    def populate_book_from_mi(self, book, mi):
         book['title'] = mi.title
         book['author'] = mi.authors
         book['author_sort'] = mi.author_sort
-        if hasattr(mi,'publisher'):
+        if hasattr(mi, 'publisher'):
             book['publisher'] = mi.publisher
-        if hasattr(mi,'path'):
+        if hasattr(mi, 'path'):
             book['path'] = mi.path
-        if hasattr(mi,'id'):
+        if hasattr(mi, 'id'):
             book['calibre_id'] = mi.id
 
-    #---------CODE FROM GRANT DRAKE---------
+    # ---------CODE FROM GRANT DRAKE---------
     # Base code from Grant Drake https://www.mobileread.com/forums/showthread.php?t=118761
     def open_with(self, book, external_app_path, app_args):
         if not self.is_library_selected:
@@ -294,19 +303,24 @@ class BookEditor(InterfaceAction):
         # Confirm format selected in formats
         try:
             path_to_book = db.format_abspath(book_id, 'RTF', index_is_id=True)
+            print('path to book: ', path_to_book)
         except:
             path_to_book = None
 
         if not path_to_book:
-            return error_dialog(self.gui, 'Cannot open: ' + book[0]['title'],
-                    'No format available.',
-                    show=True)
+            try:
+                print('Converting')
+                path_to_book = self.convert(db.format_abspath(book_id, 'EPUB', index_is_id=True))
+            except:
+                return error_dialog(self.gui, 'Cannot open: ' + book[0]['title'],
+                                'No format available.',
+                                show=True)
 
         # Confirm we have defined an application for that format in tweaks
         if external_app_path is None:
             return error_dialog(self.gui, 'Cannot open with',
-                    'Path not specified for this format in your configuration.',
-                    show=True)
+                                'Path not specified for this format in your configuration.',
+                                show=True)
         self.launch_app(external_app_path, app_args, path_to_book, book)
 
     def launch_app(self, external_app_path, app_args, path_to_file, book, wrap_args=True):
@@ -314,7 +328,8 @@ class BookEditor(InterfaceAction):
 #         path_to_file = path_to_file.encode('utf-8')
         external_app_path = prefs['ebook_file_path']
         if DEBUG:
-            print('Open: ', external_app_path, '(file): ', path_to_file, ' (args): ', app_args)
+            print('Open: ', external_app_path, '(file): ',
+                  path_to_file, ' (args): ', app_args)
 
         if isosx:
             # For OSX we will not support optional command line arguments currently
@@ -332,7 +347,8 @@ class BookEditor(InterfaceAction):
             app_args_list.insert(0, external_app_path)
 
             # ---------ARGS---------
-            arg = '%s open "%s" "%s"' % (external_app_path, path_to_file, book[0]['title'])
+            arg = '%s open "%s" "%s"' % (
+                external_app_path, path_to_file, book[0]['title'])
 
             if iswindows:
                 # Add to the recently opened files list to support windows jump lists etc.
@@ -343,10 +359,35 @@ class BookEditor(InterfaceAction):
                 print('About to run a command:', arg)
                 clean_env = dict(os.environ)
                 del clean_env['PATH']
-                subprocess.Popen(arg, creationflags=DETACHED_PROCESS, env=clean_env)
+                subprocess.Popen(
+                    arg, creationflags=DETACHED_PROCESS, env=clean_env)
 
-            else: #Linux
+            else:  # Linux
                 clean_env = dict(os.environ)
                 clean_env['LD_LIBRARY_PATH'] = ''
                 subprocess.Popen(app_args_list, env=clean_env)
-        
+
+    # ---------Convert from EPUB to RTF---------
+    def convert(self, path_to_file, wrap_args=True):
+        db = self.gui.current_db
+
+        if DEBUG:
+            print('Input File: ', os.path.dirname(path_to_file),
+                    '(Output File): ', os.path.splitext(path_to_file)[0] + '.rtf')
+
+        # ---------ARGS---------
+        arg = 'ebook-convert "%s" "%s"' % (path_to_file, os.path.splitext(path_to_file)[0] + '.rtf')
+
+        if iswindows:
+            # Add to the recently opened files list to support windows jump lists etc.
+            from calibre.gui2 import add_to_recent_docs
+            add_to_recent_docs(path_to_file)
+
+            DETACHED_PROCESS = 0x00000008
+            print('About to run a command:', arg)
+            clean_env = dict(os.environ)
+            del clean_env['PATH']
+            subprocess.Popen(
+                arg, creationflags=DETACHED_PROCESS, env=clean_env)
+
+            return os.path.splitext(path_to_file)[0] + '.rtf'
