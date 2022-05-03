@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Diagnostics;
 
 namespace BookEditorTool
 {
@@ -42,6 +43,7 @@ namespace BookEditorTool
                 if (args[count] == "open")
                 {
                     cmdOpen = true;
+                    System.Diagnostics.Process.Start("calibre", " -s");
                     bookFilepath = Path.GetDirectoryName(args[count + 1]);
                     bookFilenameImported = Path.GetFileName(args[count + 1]);
                     TextEditField.LoadFile(args[count + 1], RichTextBoxStreamType.RichText);
@@ -79,6 +81,19 @@ namespace BookEditorTool
                 if (saveFileDialog1.ShowDialog() == DialogResult.OK)
                 {
                     TextEditField.SaveFile(saveFileDialog1.FileName);
+                }
+
+                if (cmdOpen)
+                {
+                    string convertCmd = string.Format("ebook-convert {0} {1}", bookFilepath, Path.ChangeExtension(bookFilepath, "rtf")); // input file, output file
+
+                    ProcessStartInfo processtartinfo = new ProcessStartInfo();
+                    processtartinfo.Arguments = convertCmd;
+                    processtartinfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    processtartinfo.FileName = "CMD.exe";
+                    System.Diagnostics.Process.Start(processtartinfo);
+
+                    System.Diagnostics.Process.Start("calibre");
                 }
             }
             catch (Exception errorMsg)
