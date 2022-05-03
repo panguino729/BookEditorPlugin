@@ -83,18 +83,18 @@ namespace BookEditorTool
                     TextEditField.SaveFile(saveFileDialog1.FileName);
                 }
 
-                if (cmdOpen)
-                {
-                    string convertCmd = string.Format("ebook-convert {0} {1}", bookFilepath, Path.ChangeExtension(bookFilepath, "rtf")); // input file, output file
+                //if (cmdOpen)
+                //{
+                //    string convertCmd = string.Format("ebook-convert {0} {1}", bookFilepath, Path.ChangeExtension(bookFilepath, "rtf")); // input file, output file
 
-                    ProcessStartInfo processtartinfo = new ProcessStartInfo();
-                    processtartinfo.Arguments = convertCmd;
-                    processtartinfo.WindowStyle = ProcessWindowStyle.Hidden;
-                    processtartinfo.FileName = "CMD.exe";
-                    System.Diagnostics.Process.Start(processtartinfo);
+                //    ProcessStartInfo processtartinfo = new ProcessStartInfo();
+                //    processtartinfo.Arguments = convertCmd;
+                //    processtartinfo.WindowStyle = ProcessWindowStyle.Hidden;
+                //    processtartinfo.FileName = "CMD.exe";
+                //    System.Diagnostics.Process.Start(processtartinfo);
 
-                    System.Diagnostics.Process.Start("calibre");
-                }
+                //    System.Diagnostics.Process.Start("calibre");
+                //}
             }
             catch (Exception errorMsg)
             {
