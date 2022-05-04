@@ -109,16 +109,17 @@ namespace BookEditorTool
                         // Source: https://www.codeproject.com/Questions/173331/CMD-from-Windows-Form
                         string convertCmd = string.Format("ebook-convert \"{0}\" \"{1}\"", orgBookPath, Path.ChangeExtension(orgBookPath, "epub")); // input file, output file
 
-                        Process process = new Process();
-                        ProcessStartInfo processtartinfo = new ProcessStartInfo();
-                        processtartinfo.Arguments = convertCmd;
-                        processtartinfo.WindowStyle = ProcessWindowStyle.Hidden;
-                        processtartinfo.FileName = "CMD.exe";
+                        //Process process = new Process();
+                        //ProcessStartInfo processtartinfo = new ProcessStartInfo();
+                        //processtartinfo.Arguments = "/c " + convertCmd;
+                        //processtartinfo.WindowStyle = ProcessWindowStyle.Hidden;
+                        //processtartinfo.WorkingDirectory = @"C:\...";
+                        //processtartinfo.FileName = "cmd.exe";
 
-                        process.StartInfo = processtartinfo;
-                        process.Start();
+                        //process.StartInfo = processtartinfo;
+                        //process.Start();
 
-                        System.Diagnostics.Process.Start("calibre");
+                        Process.Start("calibre");
 
                         TextEditField.Text = convertCmd;
                     }
