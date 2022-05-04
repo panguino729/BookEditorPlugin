@@ -16,9 +16,11 @@ namespace BookEditorTool
     {
         public FontFamily[] Families { get; }
 
+        private string orgBookPath = "";
         private string bookFilepath = "";
         private string bookFilenameImported = "";
         private bool cmdOpen = false;
+        private MemoryStream userInput;
 
         public Form1()
         {
@@ -37,6 +39,9 @@ namespace BookEditorTool
 
             int count = 0;
 
+            // Declare a new memory stream.
+            userInput = new MemoryStream();
+
             // CMD: <BookEditorTool.exe filepath> open <book name>
             foreach (string arg in args)
             {
@@ -44,6 +49,7 @@ namespace BookEditorTool
                 {
                     cmdOpen = true;
                     System.Diagnostics.Process.Start("calibre", " -s");
+                    orgBookPath = args[count + 1];
                     bookFilepath = Path.GetDirectoryName(args[count + 1]);
                     bookFilenameImported = Path.GetFileName(args[count + 1]);
                     TextEditField.LoadFile(args[count + 1], RichTextBoxStreamType.RichText);
@@ -73,33 +79,73 @@ namespace BookEditorTool
                     saveFileDialog1.FileName = openFiles.Items[0].ToString();
                 }
 
+                saveFileDialog1.CreatePrompt = true;
                 saveFileDialog1.OverwritePrompt = true;
                 saveFileDialog1.InitialDirectory = bookFilepath;
                 saveFileDialog1.DefaultExt = "rtf";
                 saveFileDialog1.Filter = "Rich Text Format|*.rtf";
 
+                //bookFilepath = Path.GetDirectoryName(bookFilepath);
+
+                Stream fileStream;
+
+                TextEditField.SaveFile(userInput, RichTextBoxStreamType.RichText);
+                userInput.WriteByte(13);
+
                 if (saveFileDialog1.ShowDialog() == DialogResult.OK)
                 {
-                    TextEditField.SaveFile(saveFileDialog1.FileName);
+                    //TextEditField.SaveFile(saveFileDialog1.FileName);
+
+                    // Open the file, copy the contents of memoryStream to fileStream,
+                    // and close fileStream. Set the memoryStream.Position value to 0 
+                    // to copy the entire stream. 
+                    fileStream = saveFileDialog1.OpenFile();
+                    userInput.Position = 0;
+                    userInput.WriteTo(fileStream);
+                    fileStream.Close();
+
+                    if (cmdOpen)
+                    {
+                        // Source: https://www.codeproject.com/Questions/173331/CMD-from-Windows-Form
+                        string convertCmd = string.Format("ebook-convert \"{0}\" \"{1}\"", orgBookPath, Path.ChangeExtension(orgBookPath, "epub")); // input file, output file
+
+                        Process process = new Process();
+                        ProcessStartInfo processtartinfo = new ProcessStartInfo();
+                        processtartinfo.Arguments = convertCmd;
+                        processtartinfo.WindowStyle = ProcessWindowStyle.Hidden;
+                        processtartinfo.FileName = "CMD.exe";
+
+                        process.StartInfo = processtartinfo;
+                        process.Start();
+
+                        System.Diagnostics.Process.Start("calibre");
+
+                        TextEditField.Text = convertCmd;
+                    }
+
+                    //Application.Exit();
                 }
-
-                //if (cmdOpen)
-                //{
-                //    // Source: https://www.codeproject.com/Questions/173331/CMD-from-Windows-Form
-                //    string convertCmd = string.Format("ebook-convert {0} {1}", bookFilepath, Path.ChangeExtension(bookFilepath, "rtf")); // input file, output file
-
-                //    ProcessStartInfo processtartinfo = new ProcessStartInfo();
-                //    processtartinfo.Arguments = convertCmd;
-                //    processtartinfo.WindowStyle = ProcessWindowStyle.Hidden;
-                //    processtartinfo.FileName = "CMD.exe";
-                //    System.Diagnostics.Process.Start(processtartinfo);
-
-                //    System.Diagnostics.Process.Start("calibre");
-                //}
             }
             catch (Exception errorMsg)
             {
                 MessageBox.Show(errorMsg.Message);
+            }
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (cmdOpen)
+            {
+                // Source: https://www.codeproject.com/Questions/173331/CMD-from-Windows-Form
+                string convertCmd = string.Format("ebook-convert {0} {1}", bookFilepath, Path.ChangeExtension(bookFilepath, "rtf")); // input file, output file
+
+                ProcessStartInfo processtartinfo = new ProcessStartInfo();
+                processtartinfo.Arguments = convertCmd;
+                processtartinfo.WindowStyle = ProcessWindowStyle.Hidden;
+                processtartinfo.FileName = "CMD.exe";
+                System.Diagnostics.Process.Start(processtartinfo);
+
+                System.Diagnostics.Process.Start("calibre");
             }
         }
 
