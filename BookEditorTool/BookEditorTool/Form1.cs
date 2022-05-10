@@ -107,24 +107,28 @@ namespace BookEditorTool
                     if (cmdOpen)
                     {
                         // Source: https://www.codeproject.com/Questions/173331/CMD-from-Windows-Form
-                        string convertCmd = string.Format("ebook-convert \"{0}\" \"{1}\"", orgBookPath, Path.ChangeExtension(orgBookPath, "epub")); // input file, output file
+                        string convertCmd = string.Format("\"{0}\" \"{1}\"", orgBookPath, Path.ChangeExtension(orgBookPath, "epub")); // input file, output file
 
-                        //Process process = new Process();
-                        //ProcessStartInfo processtartinfo = new ProcessStartInfo();
-                        //processtartinfo.Arguments = "/c " + convertCmd;
-                        //processtartinfo.WindowStyle = ProcessWindowStyle.Hidden;
-                        //processtartinfo.WorkingDirectory = @"C:\...";
-                        //processtartinfo.FileName = "cmd.exe";
+                        Process process = new Process();
+                        process.StartInfo.Arguments = convertCmd;
+                        process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                        process.StartInfo.FileName = "ebook-convert.exe";
+                        process.StartInfo.WorkingDirectory = @" C:\";
+                        process.Start();
 
-                        //process.StartInfo = processtartinfo;
-                        //process.Start();
+                        //ProcessStartInfo startInfo = new ProcessStartInfo();
+                        //startInfo.FileName = "cmd.exe";
+                        //startInfo.WindowStyle = ProcessWindowStyle.Normal;
+                        //startInfo.UseShellExecute = false;
+                        //startInfo.RedirectStandardOutput = true;
+                        //startInfo.RedirectStandardInput = true;
 
                         Process.Start("calibre");
 
                         TextEditField.Text = convertCmd;
                     }
 
-                    //Application.Exit();
+                    Application.Exit();
                 }
             }
             catch (Exception errorMsg)
